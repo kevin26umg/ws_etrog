@@ -1,0 +1,17 @@
+services:
+  websocket:
+    build: .
+    volumes:
+      - ./certs:/app/certs
+    expose:
+      - "3026"
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - websocket
