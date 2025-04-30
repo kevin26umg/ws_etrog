@@ -27,6 +27,20 @@ wss.on("connection", (ws) => {
     }));
   }
 
+
+    // ⏱ Ping cada 30 segundos para mantener viva la conexión
+    const pingInterval = setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.ping(); // envía ping al cliente
+      }
+    }, 30000);
+  
+    // 🧹 Limpiar intervalo cuando el cliente se desconecta
+    ws.on("close", () => {
+      console.log("🔴 Cliente desconectado");
+      clearInterval(pingInterval);
+    });
+
   ws.on("message", (message) => {
     console.log("📨 Mensaje recibido:", message.toString());
 
