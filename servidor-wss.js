@@ -2,7 +2,7 @@ const fs = require("fs");
 const https = require("https");
 const WebSocket = require("ws");
 
-// 🔐 HTTPS para WSS
+
 const server = https.createServer({
   cert: fs.readFileSync("/app/certs/cert.pem"),
   key: fs.readFileSync("/app/certs/key.pem")
@@ -10,7 +10,6 @@ const server = https.createServer({
 
 const wss = new WebSocket.Server({ server });
 
-// 🧠 Estado global que se mantiene en memoria
 let estadoGlobal = {
   mesas: [],
   colores: {}
@@ -19,7 +18,7 @@ let estadoGlobal = {
 wss.on("connection", (ws) => {
   console.log("🟢 Cliente conectado");
 
-  // 🔄 Enviar estado actual al nuevo cliente
+
   if (estadoGlobal.mesas.length > 0) {
     ws.send(JSON.stringify({
       tipo: "sincronizar_mesas",
@@ -28,19 +27,20 @@ wss.on("connection", (ws) => {
   }
 
 
-    // ⏱ Ping cada 30 segundos para mantener viva la conexión
+
     const pingInterval = setInterval(() => {
       if (ws.readyState === WebSocket.OPEN) {
-        ws.ping(); // envía ping al cliente
+        ws.ping(); 
       }
     }, 30000);
-  
-    // 🧹 Limpiar intervalo cuando el cliente se desconecta
+
+    
     ws.on("close", () => {
       console.log("🔴 Cliente desconectado");
       clearInterval(pingInterval);
     });
 
+    
   ws.on("message", (message) => {
     console.log("📨 Mensaje recibido:", message.toString());
 
@@ -52,11 +52,10 @@ wss.on("connection", (ws) => {
       return;
     }
 
-    // ✅ Sincronizar estado completo
+
     if (data.tipo === "sincronizar_mesas") {
       estadoGlobal = data.data;
 
-      // Reenviar a todos los demás
       wss.clients.forEach((client) => {
         if (client !== ws && client.readyState === WebSocket.OPEN) {
           client.send(JSON.stringify({
@@ -67,7 +66,6 @@ wss.on("connection", (ws) => {
       });
     }
 
-    // 🟡 Otros tipos de mensaje (globales, eventos, etc.)
     else {
       wss.clients.forEach((client) => {
         if (client !== ws && client.readyState === WebSocket.OPEN) {
